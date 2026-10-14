@@ -124,7 +124,7 @@ Through this project, the aim is to practise:
 - Applying conditional rules to data.
 - Comparing amounts and checking time windows.
 - Tracking users' previously observed cities.
-- Explaining why a transaction was flagged.
+- Explaining why a transaction was flagge
 - Validating input and testing unusual cases.
 
 ## 13. Disclaimer
