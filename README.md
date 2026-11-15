@@ -1,132 +1,304 @@
-# FraudShield: Rule-Based UPI Transaction Risk Engine
+# CP-004 FraudShield: Rule-Based UPI Transaction Risk Engine
 
-**Capstone Problem:** CP-004  
-**Domain:** Banking and FinTech  
-**Difficulty:** Intermediate  
-**Application Type:** Menu-driven console application  
-**Implementation Language:** [Python / Java / C — use your assigned track language]  
-**Project Status:** In development
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org)
+[![Status](https://img.shields.io/badge/Status-Complete-brightgreen.svg)]()
+[![Standard Library](https://img.shields.io/badge/Dependencies-Standard%20Library%20Only-success.svg)]()
+[![Domain](https://img.shields.io/badge/Domain-FinTech%20%7C%20Payment%20Security-orange.svg)]()
 
-## 1. Project Overview
+**FraudShield** is a rule-based UPI transaction risk engine built as a Python console application. It evaluates incoming UPI transactions against **nine independent, weighted fraud detection rules**, synthesizes them into an explainable **0–100 composite risk score**, and issues definitive payment decisions: **ALLOW**, **REVIEW**, or **BLOCK**.
 
-FraudShield is a rule-based transaction risk checking system. It records UPI-style transactions and checks them against predefined rules that may indicate suspicious activity. Whenever a transaction is flagged, the system should display the reason that triggered the rule.
+Every decision includes a full audit breakdown of which rules triggered and why, providing explainability for compliance, security analysts, and fraud operations teams.
 
-The goal is to implement simple, explainable checks before considering more advanced fraud detection approaches. A flagged transaction is considered suspicious by the rules; it is not proof that fraud has occurred.
+---
 
-## 2. Problem Statement
+## Table of Contents
+1. [Core Features](#core-features)
+2. [The Nine Fraud Detection Rules](#the-nine-fraud-detection-rules)
+3. [Composite Risk Scoring & Decision Model](#composite-risk-scoring--decision-model)
+4. [Centralized Configuration (`CONFIG`)](#centralized-configuration-config)
+5. [Input Validation & Supported Formats](#input-validation--supported-formats)
+6. [Interactive Console Menu](#interactive-console-menu)
+7. [Built-In Demo Scenario](#built-in-demo-scenario)
+8. [JSON Data Persistence](#json-data-persistence)
+9. [Running the Application](#running-the-application)
+10. [Running the Unit Test Suite](#running-the-unit-test-suite)
+11. [Project Structure](#project-structure)
 
-A payments startup wants to apply simple, explainable fraud rules before investing in machine learning. Every flagged transaction must show which rule was triggered.
+---
 
-## 3. Core Features
+## Core Features
 
-All five features below are compulsory for CP-004:
+- **Nine Explainable Rules:** Covers velocity bursts, amount anomalies, high-value new payees, odd hours, unrecognized devices, location jumps / impossible travel, repeated transfers (smurfing), daily limits, and large round amounts.
+- **Traceable & Explainable Audit Trail:** Every transaction records exactly which rules fired, the weight contributed, and human-readable reasoning.
+- **Dynamic 0–100 Risk Scoring:** Normalizes individual rule weights and classifies transactions into **ALLOW**, **REVIEW**, or **BLOCK**.
+- **Interactive Console Application:** Add transactions manually, inspect logs, view user risk profiles, look up IDs, and analyze rule frequency distributions.
+- **Single `CONFIG` Block:** Rule weights and thresholds are centralized in a single configuration block and can be adjusted interactively during runtime without modifying source code.
+- **Zero External Dependencies:** Built entirely with Python's standard library (`json`, `datetime`, `re`, `math`, `sys`, `os`, `unittest`).
+- **Resilient JSON Persistence:** Transactions and audit trails automatically persist across program restarts.
+- **Analyst False-Alarm Workflow (CP-004 Stretch):** Analysts can mark flagged transactions as verified false alarms with notes, and the engine automatically computes per-rule and global false-alarm rates.
+- **User Ledger Drilldown:** Inspect high-risk users and immediately review their complete historical transaction timeline.
+- **Built-in FinTech Demo Scenario:** Pre-configured simulation demonstrating legitimate baselines, velocity bursts, impossible travel, and midnight account takeover attacks.
 
-1. **Record transactions** with a transaction ID, user, amount, time (`hh:mm`), and city.
-2. **Flag unusually large transactions:** flag a transaction when its amount is above five times that user's average transaction amount.
-3. **Flag rapid transactions:** flag a user making more than three transactions within two minutes.
-4. **Flag unfamiliar-city transactions:** flag a transaction made in a city where that user has never transacted before.
-5. **Generate a risk report:** list all flagged transactions with the reason for each flag and show a risk count for each user.
+---
 
-## 4. Fraud Rules
+## The Nine Fraud Detection Rules
 
-### Rule 1 — Unusually Large Amount
+| # | Rule Name | Code | Default Weight | Condition & Threshold | Fraud Pattern Addressed |
+|---|---|---|---|---|---|
+| **1** | **Velocity Burst** | `R1_VELOCITY` | **30.0** | > 3 transactions within 120 seconds (2 mins) | Scripted bot spam, automated drainers, card testing |
+| **2** | **Amount Anomaly** | `R2_AMOUNT_ANOMALY` | **30.0** | > 5.0× user's historical average amount (min 2 past txns) | Sudden unauthorized account drainage |
+| **3** | **New Payee Large Amount** | `R3_NEW_PAYEE_LARGE` | **25.0** | First transfer to an unseen payee ≥ ₹10,000.00 | Social engineering scams, mule account transfers |
+| **4** | **Odd Hours Activity** | `R4_ODD_HOURS` | **15.0** | Transaction initiated between 00:00 and 05:00 AM | Nocturnal account compromise / unauthorized access |
+| **5** | **Unrecognized Device** | `R5_NEW_DEVICE` | **15.0** | Device ID not previously seen in user's history | Stolen credentials used on attacker's phone or emulator |
+| **6** | **Location Jump** | `R6_LOCATION_JUMP` | **30.0** | Unfamiliar city OR impossible travel (< 2 hours between cities) | Stolen credentials, proxy/VPN abuse, impossible physical transit |
+| **7** | **Repeated Transfers** | `R7_REPEAT_PAYEE` | **30.0** | > 2 transfers to the same payee within 300 seconds (5 mins) | Smurfing (splitting large funds to avoid single-transfer alarms) |
+| **8** | **Daily Limit Exceeded** | `R8_DAILY_LIMIT` | **30.0** | Cumulative volume on same calendar day > ₹1,00,000.00 | Regulatory UPI daily limits (NPCI guidelines) |
+| **9** | **Large Round Amount** | `R9_ROUND_AMOUNT` | **10.0** | Multiple of ₹1,000.00 and amount ≥ ₹10,000.00 | Criminals testing clean integer sums (₹25k, ₹50k, ₹75k) |
 
-Compare a transaction amount with the user's average transaction amount. Flag the transaction when it is **greater than five times** that average.
+---
 
-### Rule 2 — Too Many Transactions in a Short Time
+## Composite Risk Scoring & Decision Model
 
-Check transaction times for each user. Flag activity when the user makes **more than three transactions within two minutes**.
+When a transaction is evaluated:
+1. Each rule evaluates the incoming transaction and historical user activity.
+2. If a rule triggers, its corresponding weight is added to the raw score:
+   $$\text{Raw Score} = \sum_{\text{triggered rules}} \text{Weight}_i$$
+3. The raw score is capped to a scale of **0.0 to 100.0**:
+   $$\text{Risk Score} = \min(100.0, \max(0.0, \text{Raw Score}))$$
+4. The system issues one of three decisions:
+   - **`ALLOW`** ($\text{Risk Score} < 30.0$): Low risk. Transaction proceeds normally.
+   - **`REVIEW`** ($30.0 \le \text{Risk Score} < 60.0$): Moderate risk. Transaction is flagged for manual compliance review / Step-up 2FA.
+   - **`BLOCK`** ($\text{Risk Score} \ge 60.0$): Critical risk. Transaction is immediately declined.
 
-### Rule 3 — Unfamiliar City
+---
 
-Compare the transaction's city with the cities previously associated with that user. Flag the transaction if the user has not transacted in that city before.
+## Centralized Configuration (`CONFIG`)
 
-### Risk Reporting
+All thresholds, time windows, and weights are governed by a single `CONFIG` dictionary at the top of `fraudshield.py`:
 
-For each flagged transaction, show the transaction details and the rule or rules that were triggered. Also calculate the number of flagged transactions for each user.
+```python
+DEFAULT_CONFIG = {
+    "THRESHOLD_REVIEW": 30.0,
+    "THRESHOLD_BLOCK": 60.0,
+    "RULE_VELOCITY_BURST_WEIGHT": 30.0,
+    "VELOCITY_WINDOW_SECONDS": 120,
+    "VELOCITY_MAX_TXNS": 3,
+    "RULE_AMOUNT_ANOMALY_WEIGHT": 30.0,
+    "AMOUNT_ANOMALY_MULTIPLIER": 5.0,
+    "AMOUNT_ANOMALY_MIN_HISTORY": 2,
+    "RULE_NEW_PAYEE_LARGE_WEIGHT": 25.0,
+    "NEW_PAYEE_LARGE_THRESHOLD": 10000.0,
+    "RULE_ODD_HOURS_WEIGHT": 15.0,
+    "ODD_HOURS_START": 0,
+    "ODD_HOURS_END": 5,
+    "RULE_NEW_DEVICE_WEIGHT": 15.0,
+    "RULE_LOCATION_JUMP_WEIGHT": 30.0,
+    "IMPOSSIBLE_TRAVEL_WINDOW_HOURS": 2.0,
+    "RULE_REPEAT_PAYEE_WEIGHT": 30.0,
+    "REPEAT_PAYEE_WINDOW_SECONDS": 300,
+    "REPEAT_PAYEE_MAX_TXNS": 2,
+    "RULE_DAILY_LIMIT_WEIGHT": 30.0,
+    "DAILY_LIMIT_THRESHOLD": 100000.0,
+    "RULE_LARGE_ROUND_WEIGHT": 10.0,
+    "LARGE_ROUND_MIN_AMOUNT": 10000.0,
+    "LARGE_ROUND_STEP": 1000.0,
+    "DATA_FILE": "fraudshield_data.json"
+}
+```
 
-## 5. Transaction Fields
+Administrators can inspect or update these values at runtime using **Option 8** in the interactive menu without restarting the program.
 
-Each transaction should contain these fields:
+---
 
-| Field | Description |
-|---|---|
-| Transaction ID | A unique identifier for the transaction |
-| User | The user who made the transaction |
-| Amount | The transaction amount |
-| Time | Transaction time in `hh:mm` format |
-| City | The city associated with the transaction |
+## Input Validation & Supported Formats
 
-## 6. Suggested Program Workflow
+- **UPI IDs:** Checked against standard format `username@bank` (e.g., `priya@okhdfcbank`, `merchant@paytm`). Sender and receiver cannot be identical.
+- **Monetary Amounts:** Must be finite positive numbers ($> 0.00$). Automatically rounded to 2 decimal places.
+- **Timestamps:**
+  - Full datetime: `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DD HH:MM` (e.g. `2026-11-15 14:30:00`)
+  - Time-only: `HH:MM:SS` or `HH:MM` (automatically paired with today's date)
+  - Blank input: automatically applies the current system timestamp.
+- **Location & Device:** Non-empty descriptive strings (e.g., `Mumbai`, `Bengaluru`, `DEV_PIXEL_8`).
 
-1. Display a console menu.
-2. Allow the user to enter transaction details.
-3. Validate the transaction input.
-4. Check the recorded transactions against each fraud rule.
-5. Store the flag reasons for transactions that trigger rules.
-6. Display flagged transactions and the risk count per user.
-7. Allow the user to continue or exit.
+---
 
-## 7. Suggested Console Menu
+## Interactive Console Menu
 
-The exact menu can be adjusted to match the implementation:
+When launched, FraudShield displays an interactive menu:
 
-1. Add a transaction
-2. View recorded transactions
-3. Analyze transactions for risk
-4. View flagged transactions and reasons
-5. View risk count per user
-6. Exit
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║     FRAUDSHIELD: RULE-BASED UPI TRANSACTION RISK ENGINE          ║
+║     Capstone CP-004 | Explainable Multi-Rule Fraud Detection     ║
+╠══════════════════════════════════════════════════════════════════╣
+║  [1] Evaluate / Add a Transaction                                ║
+║  [2] Load & Run Built-in Demo Scenario (ATO, Velocity, Jump)     ║
+║  [3] View All Recorded Transactions                              ║
+║  [4] View Flagged Transactions & Flag Reasons (Audit Report)     ║
+║  [5] Look Up Transaction by ID                                   ║
+║  [6] View User History & Risk Profile (Risk Count per User)      ║
+║  [7] View Engine Analytics & Rule Trigger Statistics             ║
+║  [8] View / Adjust Thresholds & Rule Weights (CONFIG)            ║
+║  [9] Data Management (Save / Reload / Reset Storage)             ║
+║  [0] Exit Program                                                ║
+╚══════════════════════════════════════════════════════════════════╝
+```
 
-## 8. Technology
+---
 
-- **Programming language:** [Python / Java / C — use your assigned track language]
-- **Interface:** Console / terminal
-- **Data handling:** In-memory records to start with
+## Built-In Demo Scenario
 
-The capstone brief does not require a GUI, website, or database. Any additional persistence or other enhancements should be treated as optional and discussed with the trainer if needed.
+Select **Option 2** to load the comprehensive 15-event simulation. The scenario simulates:
 
-## 9. Running the Project
+1. **Legitimate User Baseline:**
+   - User `priya@okhdfcbank` makes normal purchases in Mumbai on `DEV_PIXEL_8` (₹350 coffee, ₹850 grocery, ₹600 lunch). Average baseline: ₹600.
+   - Outcome: **`ALLOW`** (Score: 0.0).
 
-Add the run command for your chosen language after your source file has been created.
+2. **Velocity Burst Attack:**
+   - User `rahul.verma@ybl` sends 4 transactions within 75 seconds.
+   - 4th transaction triggers `R1_VELOCITY` (> 3 txns within 120s).
+   - Outcome: **`REVIEW`** (Score: 30.0).
 
-Examples of the kind of command to document:
+3. **Geographic Anomaly / Impossible Travel:**
+   - User `amit.kumar@sbi` transacts in Bengaluru at 16:00.
+   - 20 minutes later, a ₹25,000 transaction is attempted from London on an unknown device (`DEV_UNKNOWN_LINUX`).
+   - Triggers `R3_NEW_PAYEE_LARGE` (+25), `R5_NEW_DEVICE` (+15), `R6_LOCATION_JUMP` (+30).
+   - Outcome: **`BLOCK`** (Score: 70.0).
 
-- **Python:** `python main.py`
-- **Java:** compile the Java source file, then run its class with `java`
-- **C:** compile the C source file, then run the resulting program
+4. **Account Takeover (ATO) Midnight Attack:**
+   - Compromised credentials for `priya@okhdfcbank` used at 02:40 AM from a rooted emulator (`DEV_ROOTED_EMULATOR_99`) in Kolkata.
+   - Transfers ₹75,000 (125× her average) to an unverified mule receiver.
+   - Triggers: Amount Anomaly (+30), New Payee Large (+25), Odd Hours (+15), Unrecognized Device (+15), Unfamiliar City (+30), Large Round Amount (+10).
+   - Outcome: **`BLOCK`** (Score: 100.0).
 
-Replace these examples with the exact filename and command used in your project.
+5. **Smurfing / Repeated Payee Spam:**
+   - User `vikram.singh@axisbank` sends three rapid ₹9,000 payments to the same recipient in under 90 seconds.
+   - Outcome: **`REVIEW`** (Score: 30.0).
 
-## 10. Test Scenarios
+6. **Daily UPI Limit Ceiling Breach:**
+   - User `sneha.patel@icici` attempts two payments totaling ₹1,15,000 in one day.
+   - Outcome: **`REVIEW`** (Score: 40.0).
 
-Test the program with cases such as:
+---
 
-- A transaction amount greater than five times the user's average amount.
-- A user making four or more transactions within a two-minute period.
-- A user making a transaction in a city not present in their previous transaction history.
-- A normal transaction that does not trigger any rule.
-- A transaction that triggers more than one rule, ensuring every applicable reason is shown.
-- Invalid input, such as an empty user, invalid time format, or a non-positive amount.
+## JSON Data Persistence
 
-## 11. Optional Stretch Features
+Transactions are serialized to `fraudshield_data.json` upon evaluation. Sample record:
 
-The capstone brief suggests these optional extensions:
+```json
+{
+  "transaction_id": "TXN-1010",
+  "sender_upi": "priya@okhdfcbank",
+  "receiver_upi": "crypto_cashout@mulebank",
+  "amount": 75000.0,
+  "timestamp": "2026-11-16 02:40:00",
+  "city": "Kolkata",
+  "device_id": "DEV_ROOTED_EMULATOR_99",
+  "risk_score": 100.0,
+  "decision": "BLOCK",
+  "triggered_rules": [
+    {
+      "rule_id": "R2_AMOUNT_ANOMALY",
+      "name": "Amount Anomaly",
+      "weight": 30.0,
+      "triggered": true,
+      "reason": "Unusually large amount: ₹75,000.00 is 125.0x the user's historical average of ₹600.00 (threshold: > 5.0x = ₹3,000.00)."
+    },
+    {
+      "rule_id": "R3_NEW_PAYEE_LARGE",
+      "name": "New Payee with Large Amount",
+      "weight": 25.0,
+      "triggered": true,
+      "reason": "High-value first-time transfer: ₹75,000.00 sent to never-before-seen payee 'crypto_cashout@mulebank' (threshold: >= ₹10,000.00)."
+    },
+    {
+      "rule_id": "R4_ODD_HOURS",
+      "name": "Odd Hours Activity",
+      "weight": 15.0,
+      "triggered": true,
+      "reason": "Odd hours transaction: Initiated at 02:40:00 inside high-risk nocturnal window (00:00 - 05:00)."
+    },
+    {
+      "rule_id": "R5_NEW_DEVICE",
+      "name": "Unrecognized Device",
+      "weight": 15.0,
+      "triggered": true,
+      "reason": "Device anomaly: 'DEV_ROOTED_EMULATOR_99' has never been used by this user before (known device(s): 'DEV_PIXEL_8')."
+    },
+    {
+      "rule_id": "R6_LOCATION_JUMP",
+      "name": "Location Jump / Unfamiliar City",
+      "weight": 30.0,
+      "triggered": true,
+      "reason": "Unfamiliar city: First transaction from 'Kolkata' for this user (previous transacted cities: Mumbai, Mumbai, Mumbai)."
+    },
+    {
+      "rule_id": "R9_ROUND_AMOUNT",
+      "name": "Large Round Amount",
+      "weight": 10.0,
+      "triggered": true,
+      "reason": "Suspicious round figure: ₹75,000.00 is an exact multiple of ₹1,000 above ₹10,000.00 (common signature of account draining / cash-out)."
+    }
+  ]
+}
+```
 
-- Allow an administrator to change rule thresholds without editing the source code.
-- Allow an analyst to mark a flag as a false alarm and report the false-alarm rate for each rule.
+---
 
-## 12. Learning Objectives
+## Running the Application
 
-Through this project, the aim is to practise:
+### Interactive Console Mode
+Run with Python 3:
+```bash
+python3 fraudshield.py
+```
+*(On Windows systems where `py` or `python` is configured: `py fraudshield.py` or `python fraudshield.py`)*
 
-- Working with transaction records and user history.
-- Applying conditional rules to data.
-- Comparing amounts and checking time windows.
-- Tracking users' previously observed cities.
-- Explaining why a transaction was flagge
-- Validating input and testing unusual cases.
+Choose **Option 2** to load and run the built-in demo scenario.
 
-## 13. Disclaimer
+### Non-Interactive Demo CLI Mode
+To run the automated demo without interactive pauses:
+```bash
+python3 fraudshield.py --demo
+```
 
-FraudShield is an educational capstone simulation. Its rule-based flags are for demonstration and learning; they do not prove that a transaction is fraudulent and should not be used as a real payment security system.
+### Display Current Engine Analytics
+```bash
+python3 fraudshield.py --stats
+```
+
+---
+
+## Running the Unit Test Suite
+
+FraudShield includes 14 unit tests validating all 9 rules, validators, score bounds, and persistence:
+
+```bash
+python3 -m unittest test_fraudshield.py
+```
+
+Output:
+```text
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.025s
+
+OK
+```
+
+---
+
+## Project Structure
+
+```text
+cp-04 fraudshield/
+├── fraudshield.py         # Main risk engine, 9 rules, validation, CLI & demo
+├── test_fraudshield.py    # Complete automated unit test suite (14 test cases)
+├── fraudshield_data.json  # Persistent JSON transaction database & audit trail
+└── README.md              # Project documentation & reference specification
+```
+
+---
+
+## Disclaimer
+FraudShield is an educational FinTech capstone simulation developed under CP-004. The rule-based flags are for risk assessment and demonstration; they indicate statistical suspicion rather than definitive legal proof of fraud.

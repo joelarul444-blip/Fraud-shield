@@ -1,0 +1,330 @@
+[
+  {
+    "transaction_id": "TXN-1001",
+    "sender_upi": "priya@okhdfcbank",
+    "receiver_upi": "cafe_coffee_day@icici",
+    "amount": 350.0,
+    "timestamp": "2026-11-15 10:15:00",
+    "city": "Mumbai",
+    "device_id": "DEV_PIXEL_8",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1002",
+    "sender_upi": "priya@okhdfcbank",
+    "receiver_upi": "kirana_store@paytm",
+    "amount": 850.0,
+    "timestamp": "2026-11-15 12:30:00",
+    "city": "Mumbai",
+    "device_id": "DEV_PIXEL_8",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1003",
+    "sender_upi": "priya@okhdfcbank",
+    "receiver_upi": "rohit.colleague@okaxis",
+    "amount": 600.0,
+    "timestamp": "2026-11-15 14:10:00",
+    "city": "Mumbai",
+    "device_id": "DEV_PIXEL_8",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1004",
+    "sender_upi": "rahul.verma@ybl",
+    "receiver_upi": "shop1@paytm",
+    "amount": 500.0,
+    "timestamp": "2026-11-15 15:00:00",
+    "city": "Delhi",
+    "device_id": "DEV_SAMSUNG_S23",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1005",
+    "sender_upi": "rahul.verma@ybl",
+    "receiver_upi": "shop2@paytm",
+    "amount": 600.0,
+    "timestamp": "2026-11-15 15:00:25",
+    "city": "Delhi",
+    "device_id": "DEV_SAMSUNG_S23",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1006",
+    "sender_upi": "rahul.verma@ybl",
+    "receiver_upi": "shop3@paytm",
+    "amount": 400.0,
+    "timestamp": "2026-11-15 15:00:50",
+    "city": "Delhi",
+    "device_id": "DEV_SAMSUNG_S23",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1007",
+    "sender_upi": "rahul.verma@ybl",
+    "receiver_upi": "shop4@paytm",
+    "amount": 750.0,
+    "timestamp": "2026-11-15 15:01:15",
+    "city": "Delhi",
+    "device_id": "DEV_SAMSUNG_S23",
+    "risk_score": 30.0,
+    "decision": "REVIEW",
+    "triggered_rules": [
+      {
+        "rule_id": "R1_VELOCITY",
+        "name": "Velocity Burst",
+        "weight": 30.0,
+        "triggered": true,
+        "reason": "Rapid transaction burst: User initiated 4 transactions within 120s (threshold: > 3)."
+      }
+    ],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1008",
+    "sender_upi": "amit.kumar@sbi",
+    "receiver_upi": "bookstore@icici",
+    "amount": 1200.0,
+    "timestamp": "2026-11-15 16:00:00",
+    "city": "Bengaluru",
+    "device_id": "DEV_IPHONE_15",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1009",
+    "sender_upi": "amit.kumar@sbi",
+    "receiver_upi": "overseas_merchant@barclays",
+    "amount": 25000.0,
+    "timestamp": "2026-11-15 16:20:00",
+    "city": "London",
+    "device_id": "DEV_UNKNOWN_LINUX",
+    "risk_score": 80.0,
+    "decision": "BLOCK",
+    "triggered_rules": [
+      {
+        "rule_id": "R3_NEW_PAYEE_LARGE",
+        "name": "New Payee with Large Amount",
+        "weight": 25.0,
+        "triggered": true,
+        "reason": "High-value first-time transfer: \u20b925,000.00 sent to never-before-seen payee 'overseas_merchant@barclays' (threshold: >= \u20b910,000.00)."
+      },
+      {
+        "rule_id": "R5_NEW_DEVICE",
+        "name": "Unrecognized Device",
+        "weight": 15.0,
+        "triggered": true,
+        "reason": "Device anomaly: 'DEV_UNKNOWN_LINUX' has never been used by this user before (known device(s): 'DEV_IPHONE_15')."
+      },
+      {
+        "rule_id": "R6_LOCATION_JUMP",
+        "name": "Location Jump / Unfamiliar City",
+        "weight": 30.0,
+        "triggered": true,
+        "reason": "Impossible travel detected: User transacted in 'Bengaluru' then 'London' just 20 minutes later (impossible physical transit < 2.0 hrs)."
+      },
+      {
+        "rule_id": "R9_ROUND_AMOUNT",
+        "name": "Large Round Amount",
+        "weight": 10.0,
+        "triggered": true,
+        "reason": "Suspicious round figure: \u20b925,000.00 is an exact multiple of \u20b91,000 above \u20b910,000.00 (common signature of account draining / cash-out)."
+      }
+    ],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1010",
+    "sender_upi": "priya@okhdfcbank",
+    "receiver_upi": "crypto_cashout@mulebank",
+    "amount": 75000.0,
+    "timestamp": "2026-11-16 02:40:00",
+    "city": "Kolkata",
+    "device_id": "DEV_ROOTED_EMULATOR_99",
+    "risk_score": 100.0,
+    "decision": "BLOCK",
+    "triggered_rules": [
+      {
+        "rule_id": "R2_AMOUNT_ANOMALY",
+        "name": "Amount Anomaly",
+        "weight": 30.0,
+        "triggered": true,
+        "reason": "Unusually large amount: \u20b975,000.00 is 125.0x the user's historical average of \u20b9600.00 (threshold: > 5.0x = \u20b93,000.00)."
+      },
+      {
+        "rule_id": "R3_NEW_PAYEE_LARGE",
+        "name": "New Payee with Large Amount",
+        "weight": 25.0,
+        "triggered": true,
+        "reason": "High-value first-time transfer: \u20b975,000.00 sent to never-before-seen payee 'crypto_cashout@mulebank' (threshold: >= \u20b910,000.00)."
+      },
+      {
+        "rule_id": "R4_ODD_HOURS",
+        "name": "Odd Hours Activity",
+        "weight": 15.0,
+        "triggered": true,
+        "reason": "Odd hours transaction: Initiated at 02:40:00 inside high-risk nocturnal window (00:00 - 05:00)."
+      },
+      {
+        "rule_id": "R5_NEW_DEVICE",
+        "name": "Unrecognized Device",
+        "weight": 15.0,
+        "triggered": true,
+        "reason": "Device anomaly: 'DEV_ROOTED_EMULATOR_99' has never been used by this user before (known device(s): 'DEV_PIXEL_8')."
+      },
+      {
+        "rule_id": "R6_LOCATION_JUMP",
+        "name": "Location Jump / Unfamiliar City",
+        "weight": 30.0,
+        "triggered": true,
+        "reason": "Unfamiliar city: First transaction from 'Kolkata' for this user (previous transacted cities: Mumbai)."
+      },
+      {
+        "rule_id": "R9_ROUND_AMOUNT",
+        "name": "Large Round Amount",
+        "weight": 10.0,
+        "triggered": true,
+        "reason": "Suspicious round figure: \u20b975,000.00 is an exact multiple of \u20b91,000 above \u20b910,000.00 (common signature of account draining / cash-out)."
+      }
+    ],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1011",
+    "sender_upi": "vikram.singh@axisbank",
+    "receiver_upi": "quick_payout@paytm",
+    "amount": 9000.0,
+    "timestamp": "2026-11-15 18:00:00",
+    "city": "Pune",
+    "device_id": "DEV_ONEPLUS_11",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1012",
+    "sender_upi": "vikram.singh@axisbank",
+    "receiver_upi": "quick_payout@paytm",
+    "amount": 9000.0,
+    "timestamp": "2026-11-15 18:00:40",
+    "city": "Pune",
+    "device_id": "DEV_ONEPLUS_11",
+    "risk_score": 0.0,
+    "decision": "ALLOW",
+    "triggered_rules": [],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1013",
+    "sender_upi": "vikram.singh@axisbank",
+    "receiver_upi": "quick_payout@paytm",
+    "amount": 9000.0,
+    "timestamp": "2026-11-15 18:01:30",
+    "city": "Pune",
+    "device_id": "DEV_ONEPLUS_11",
+    "risk_score": 30.0,
+    "decision": "REVIEW",
+    "triggered_rules": [
+      {
+        "rule_id": "R7_REPEAT_PAYEE",
+        "name": "Repeated Transfers to Single Payee",
+        "weight": 30.0,
+        "triggered": true,
+        "reason": "Smurfing / repeated transfer pattern: 3 transactions sent to payee 'quick_payout@paytm' within 300s (threshold: > 2)."
+      }
+    ],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1014",
+    "sender_upi": "sneha.patel@icici",
+    "receiver_upi": "tuition_fees@sbi",
+    "amount": 60000.0,
+    "timestamp": "2026-11-15 12:00:00",
+    "city": "Chennai",
+    "device_id": "DEV_SNEHA_LAPTOP",
+    "risk_score": 35.0,
+    "decision": "REVIEW",
+    "triggered_rules": [
+      {
+        "rule_id": "R3_NEW_PAYEE_LARGE",
+        "name": "New Payee with Large Amount",
+        "weight": 25.0,
+        "triggered": true,
+        "reason": "High-value first-time transfer: \u20b960,000.00 sent to never-before-seen payee 'tuition_fees@sbi' (threshold: >= \u20b910,000.00)."
+      },
+      {
+        "rule_id": "R9_ROUND_AMOUNT",
+        "name": "Large Round Amount",
+        "weight": 10.0,
+        "triggered": true,
+        "reason": "Suspicious round figure: \u20b960,000.00 is an exact multiple of \u20b91,000 above \u20b910,000.00 (common signature of account draining / cash-out)."
+      }
+    ],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  },
+  {
+    "transaction_id": "TXN-1015",
+    "sender_upi": "sneha.patel@icici",
+    "receiver_upi": "tuition_fees@sbi",
+    "amount": 55000.0,
+    "timestamp": "2026-11-15 14:00:00",
+    "city": "Chennai",
+    "device_id": "DEV_SNEHA_LAPTOP",
+    "risk_score": 40.0,
+    "decision": "REVIEW",
+    "triggered_rules": [
+      {
+        "rule_id": "R8_DAILY_LIMIT",
+        "name": "Daily Transaction Limit Exceeded",
+        "weight": 30.0,
+        "triggered": true,
+        "reason": "Daily UPI ceiling breached: Projected cumulative daily total is \u20b9115,000.00 (previous today: \u20b960,000.00 + current: \u20b955,000.00), exceeding daily limit of \u20b9100,000.00."
+      },
+      {
+        "rule_id": "R9_ROUND_AMOUNT",
+        "name": "Large Round Amount",
+        "weight": 10.0,
+        "triggered": true,
+        "reason": "Suspicious round figure: \u20b955,000.00 is an exact multiple of \u20b91,000 above \u20b910,000.00 (common signature of account draining / cash-out)."
+      }
+    ],
+    "is_false_alarm": false,
+    "analyst_notes": ""
+  }
+]
