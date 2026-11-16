@@ -247,24 +247,48 @@ Transactions are serialized to `fraudshield_data.json` upon evaluation. Sample r
 
 ## Running the Application
 
-### Interactive Console Mode
-Run with Python 3:
+FraudShield provides **three interfaces** to fit any workflow:
+
+### 1. Modern Web Application & Live Dashboard (Recommended)
+Run the self-contained web application (powered by Python's standard library):
 ```bash
-python3 fraudshield.py
+py app.py
 ```
-*(On Windows systems where `py` or `python` is configured: `py fraudshield.py` or `python fraudshield.py`)*
+*(Or `python app.py` / `python3 app.py`)*
 
-Choose **Option 2** to load and run the built-in demo scenario.
+This launches a local REST API and Web Console, and automatically opens your browser at `http://127.0.0.1:8000`.
+- **Live Evaluator:** Interactive form with real-time risk score gauge and fired rule breakdown.
+- **1-Click Demo Runner:** Stream the 15-event FinTech simulation live.
+- **Filterable Audit Ledger:** Search by ID, user, or city, and filter by decision.
+- **Analyst Resolution:** Mark or unmark False Alarms with custom justification notes.
+- **Rule Config Sliders:** Adjust rule weights and thresholds live with immediate effect.
 
-### Non-Interactive Demo CLI Mode
-To run the automated demo without interactive pauses:
+---
+
+### 2. Native Windows Desktop GUI
+For a native desktop window (built with Python `tkinter`):
 ```bash
-python3 fraudshield.py --demo
+py app_gui.py
 ```
 
-### Display Current Engine Analytics
+---
+
+### 3. Interactive Terminal Console
+For terminal environments:
 ```bash
-python3 fraudshield.py --stats
+py fraudshield.py
+```
+Choose **Option 2** to run the step-by-step interactive demo scenario.
+
+---
+
+### 4. Non-Interactive CLI Mode
+```bash
+# Run automated demo and print full assessment cards
+py fraudshield.py --demo
+
+# View current engine statistics and rule frequency
+py fraudshield.py --stats
 ```
 
 ---
@@ -279,9 +303,9 @@ python3 -m unittest test_fraudshield.py
 
 Output:
 ```text
-..............
+................
 ----------------------------------------------------------------------
-Ran 14 tests in 0.025s
+Ran 16 tests in 0.034s
 
 OK
 ```
@@ -292,8 +316,10 @@ OK
 
 ```text
 cp-04 fraudshield/
+├── app.py                 # Web application & REST API server (Executive Dashboard)
+├── app_gui.py             # Native desktop GUI application (Tkinter)
 ├── fraudshield.py         # Main risk engine, 9 rules, validation, CLI & demo
-├── test_fraudshield.py    # Complete automated unit test suite (14 test cases)
+├── test_fraudshield.py    # Complete automated unit test suite (16 test cases)
 ├── fraudshield_data.json  # Persistent JSON transaction database & audit trail
 └── README.md              # Project documentation & reference specification
 ```
